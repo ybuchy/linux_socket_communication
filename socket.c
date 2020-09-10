@@ -11,12 +11,26 @@
 char *get_ip_str(char *hostname) {
     struct hostent *host_entry = gethostbyname(hostname);
     if (host_entry == NULL) {
-	printf("Failed to get infos about host: %s\n", hostname);
 	return NULL;
     }
     char *ip = (char *) calloc(16, sizeof(char));
     strncpy(ip, inet_ntoa(*((struct in_addr *) host_entry->h_addr)), 16);
     return ip;
+}
+
+int get_socket(char *ip) {
+    int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
+    if (socket_fd == -1) {
+	return -1;
+    }
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(ip);
+    addr.sin_port = htons(12345);
+    if (bind(socket_fd, (struct sockaddr *) &addr, sizeof(struct sockaddr)) == -1) {
+    	return -2;
+    }
+    return socket_fd;
 }
 
 int main (void) {
@@ -46,17 +60,9 @@ int main (void) {
     }
     printf("ip: %s\n", comm_ip);
 
-    int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
-    if (socket_fd == -1) {
-	printf("Failed to create socketfd %d", errno);
+    int socket_fd = get_socket(host_ip);
+    if (socket_fd == -1 || socket_fd == -2) {
+	printf("Failed to create socket");
 	return 1;
-    }
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(host_ip);
-    addr.sin_port = htons(12345);
-    if (bind(socket_fd, (struct sockaddr *) &addr, sizeof(struct sockaddr)) == -1) {
-    	printf("Failed to bind to the socket for host: %s! %d", host_ip, errno);
-    	return 1;
     }
 }
