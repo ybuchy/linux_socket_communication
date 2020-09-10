@@ -7,36 +7,23 @@
 #include <netdb.h>
 #include <unistd.h>
 
-unsigned int swap_endianness(unsigned int num) {
-    unsigned int reversed = num;
-    int num_bits = sizeof(num) * 8 - 1;
-
-    for (num >>= 1; num; num >>= 1) {
-	reversed <<= 1;
-	reversed |= num & 1;
-	num_bits--;
+char *get_ip_str(char *hostname) {
+    struct hostent *host_entry = gethostbyname(hostname);
+    if (host_entry == NULL) {
+	printf("Failed to get infos about host: %s\n", hostname);
+	return NULL;
     }
-
-    reversed <<= num_bits;
-    
-    return reversed;
+    return inet_ntoa(*((struct in_addr *) host_entry->h_addr));
 }
 
 int main (void) {
     char hostname[256];
-
     if (gethostname(hostname, sizeof(hostname)) == -1) {
 	printf("Failed to get hostname\n");
 	return 1;
     }
 
-    struct hostent *host_entry = gethostbyname(hostname);
-    if (host_entry == NULL) {
-	printf("Failed to get infos about host\n");
-	return 1;
-    }
-
-    char *host_ip = inet_ntoa(*((struct in_addr *) host_entry->h_addr));
+    char *host_ip = get_ip_str(hostname);
     printf("ip: %s\n", host_ip);
 
     printf("Enter hostname of communication partner: ");
@@ -45,14 +32,7 @@ int main (void) {
     char *newline = strchr(comm_hostname, '\n');
     if (newline != NULL) *newline = '\0';
 
-    printf("%s\n", comm_hostname);
-    host_entry = gethostbyname(comm_hostname);
-    if (host_entry == NULL) {
-	printf("Failed to get infos about host\n");
-	return 1;
-    }
-
-    char *comm_ip = inet_ntoa(*((struct in_addr *) host_entry->h_addr));
+    char *comm_ip = get_ip_str(comm_hostname);
     printf("ip: %s\n", comm_ip);
 
     
