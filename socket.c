@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
+// Returns a string containing the ip addr of the given hostname
 char *get_ip_str(char *hostname) {
     struct hostent *host_entry = gethostbyname(hostname);
     if (host_entry == NULL) {
@@ -18,6 +19,7 @@ char *get_ip_str(char *hostname) {
     return ip;
 }
 
+// Returns the number of a file descriptor that is a socket for the given ip
 int get_socket(char *ip) {
     int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
     if (socket_fd == -1) {
