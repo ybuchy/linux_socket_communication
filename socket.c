@@ -14,19 +14,19 @@ char *get_ip_str(char *hostname) {
     if (host_entry == NULL) {
 	return NULL;
     }
-    char *ip = (char *) calloc(16, sizeof(char));
-    strncpy(ip, inet_ntoa(*((struct in_addr *) host_entry->h_addr)), 16);
+    char *ip = (char *) calloc(256, sizeof(char));
+    strncpy(ip, inet_ntoa(*((struct in_addr *) host_entry->h_addr)), 256);
     return ip;
 }
 
 // Returns the number of a file descriptor that is a socket for the given ip
-int get_socket(char *ip) {
+int get_socket(char *ip, int ipv6) {
     int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
     if (socket_fd == -1) {
 	return -1;
     }
     struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
+    addr.sin_family = (ipv6) ? AF_INET6 : AF_INET;
     addr.sin_addr.s_addr = inet_addr(ip);
     addr.sin_port = htons(12345);
     if (bind(socket_fd, (struct sockaddr *) &addr, sizeof(struct sockaddr)) == -1) {
@@ -42,12 +42,13 @@ int main (void) {
 	return 1;
     }
 
+    int ipv6 = (strchr(hostname, ':') != NULL) ? 1 : 0;
+
     char *host_ip = get_ip_str(hostname);
     if (host_ip == NULL) {
 	printf("Failed to get ip addr of: %s", hostname);
 	return 1;
     }
-    printf("ip: %s\n", host_ip);
 
     printf("Enter hostname of communication partner: ");
     char comm_hostname[256] = { 0 };
@@ -60,16 +61,15 @@ int main (void) {
 	printf("Failed to get ip addr of: %s", comm_hostname);
 	return 1;
     }
-    printf("ip: %s\n", comm_ip);
 
-    int socket_fd = get_socket(host_ip);
+    int socket_fd = get_socket(host_ip, ipv6);
     if (socket_fd == -1 || socket_fd == -2) {
 	printf("Failed to create socket");
 	return 1;
     }
 
     struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
+    addr.sin_family = (ipv6) ? AF_INET6 : AF_INET;
     addr.sin_addr.s_addr = inet_addr(comm_ip);
     addr.sin_port = htons(12345);
 
