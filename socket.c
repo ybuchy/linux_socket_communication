@@ -65,4 +65,16 @@ int main (void) {
 	printf("Failed to create socket");
 	return 1;
     }
+
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(comm_ip);
+    addr.sin_port = htons(12345);
+
+    printf("Message (1022 chars max): ");
+    char message[1024] = { 0 };
+    fgets(message, sizeof(message), stdin);
+
+    size_t num_bytes = sendto(socket_fd, message, strlen(message), 0, (struct sockaddr *) &addr, sizeof(addr));
+    printf("Sent %ld bytes", num_bytes);
 }
